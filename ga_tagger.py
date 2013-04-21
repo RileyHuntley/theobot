@@ -1,11 +1,12 @@
 import mwclient
 import re
 import settings
+import sys
 
 # CC-BY-SA Theopolisme
 
 def cats_recursive(category):
-  """Recursively goes through
+	"""Recursively goes through
 	categories. Almost TOO
 	straightforward.
 	
@@ -32,6 +33,7 @@ def tagged_already(page):
 	tagged with {{Good article}} or
 	one of its redirects.
 	"""
+	check_page()
 	page = site.Pages[page]
 	text = page.edit()
 	
@@ -47,7 +49,6 @@ def process_current_gas():
 	topicon is on article and, if not,
 	adds it.
 	"""
-	check_page()
 	pages = cats_recursive('Category:Wikipedia good articles')
 
 	for talkpage in pages:
@@ -68,7 +69,6 @@ def process_delisted_gas():
 	"""Removes topicon from delisted
 	or former GA nominees.
 	"""
-	check_page()
 	pages = cats_recursive('Category:Delisted good articles')
 	pages += cats_recursive('Former good article nominees')
 
@@ -86,13 +86,14 @@ def process_delisted_gas():
 				counts['total_edits'] = counts['total_edits'] + 1
 				
 def check_page():
-        stop_page = site.Pages['User:RileyBot/Stop/12']
-        stop_page_text = stop_page.get
-	if stop_page_text.lower() != u'enable':
-		print "Check page disabled"
-                sys.exit(0)
+    stop_page = site.Pages['User:RileyBot/Stop/12']
+    stop_page_text = stop_page.edit()
+    if stop_page_text.lower() != u'enable':
+        print "Check page disabled"
+        sys.exit(0)
+        
 def main():
-        """This defines and fills a global
+	"""This defines and fills a global
 	variable for the site, and then runs.
 	"""
 	print "Logging in as " + settings.username + "..."
@@ -100,13 +101,11 @@ def main():
 	global site
 	site = mwclient.Site('en.wikipedia.org')
 	site.login(settings.username, settings.password)
-	
+	check_page()
 	global counts
 	counts = {'total_edits': 0, 'current-added': 0, 'former-removed': 0}
-	
 	process_current_gas()
 	process_delisted_gas()
-	
 	print "TOTAL EDITS MADE: " + counts['total_edits'] + "\nADDED: " + counts['current-added'] + "\nREMOVED: " + counts['former-removed']
 
 if __name__ == '__main__':
